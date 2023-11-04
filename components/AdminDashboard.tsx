@@ -5,6 +5,7 @@ type Order = {
   description: string;
   date: string;
   price: number;
+  [key: string]: string | number;
 };
 
 type Props = {
@@ -13,6 +14,9 @@ type Props = {
 
 const AdminDashboard: React.FC<Props> = ({ orders }) => {
   const [orderList, setOrderList] = useState(orders);
+  const [editIndex, setEditIndex] = useState(-1);
+  const [editField, setEditField] = useState('');
+  const [editValue, setEditValue] = useState('');
 
   const addOrder = () => {
     setOrderList([
@@ -26,15 +30,29 @@ const AdminDashboard: React.FC<Props> = ({ orders }) => {
     ]);
   };
 
+  const handleEdit = (index: number, field: string, value: string) => {
+    setEditIndex(index);
+    setEditField(field);
+    setEditValue(value);
+  };
+
+  const handleUpdate = (index: number, field: string, value: string) => {
+    const updatedOrders = [...orderList];
+    updatedOrders[index][field] = value;
+    setOrderList(updatedOrders);
+    setEditIndex(-1);
+    setEditField('');
+  };
+
   return (
-    <div className="p-6">
+    <div className="bg-white p-6">
       <button
-        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4"
+        className="mb-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
         onClick={addOrder}
       >
         +
       </button>
-      <table className="table-auto w-full">
+      <table className="w-full table-auto">
         <thead>
           <tr>
             <th className="px-4 py-2">Title</th>
@@ -46,10 +64,26 @@ const AdminDashboard: React.FC<Props> = ({ orders }) => {
         <tbody>
           {orderList.map((order, index) => (
             <tr key={index} className="hover:bg-gray-100">
-              <td className="border px-4 py-2">{order.title}</td>
-              <td className="border px-4 py-2">{order.description}</td>
-              <td className="border px-4 py-2">{order.date}</td>
-              <td className="border px-4 py-2">{order.price}</td>
+              {Object.keys(order).map((field, fieldIndex) => (
+                <td key={fieldIndex} className="border px-4 py-2" onClick={() => handleEdit(index, field, String(order[field]))}>
+                  {editIndex === index && editField === field ? (
+                    <input
+                      type="text"
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={() => handleUpdate(index, field, editValue)}
+                      onKeyPress={(event) => {
+                        if (event.key === 'Enter') {
+                          handleUpdate(index, field, editValue);
+                        }
+                      }}
+                      autoFocus
+                    />
+                  ) : (
+                    order[field]
+                  )}
+                </td>
+              ))}
             </tr>
           ))}
         </tbody>
